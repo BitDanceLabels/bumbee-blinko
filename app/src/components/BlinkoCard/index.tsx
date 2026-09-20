@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BlinkoStore } from '@/store/blinkoStore';
-import { Card } from '@heroui/react';
+import { Button, Card } from '@heroui/react';
 import { RootStore } from '@/store';
 import { ContextMenuTrigger } from '@/components/Common/ContextMenu';
 import { Note } from '@shared/lib/types';
@@ -20,7 +20,7 @@ import { PluginRender } from "@/store/plugin/pluginRender";
 import { useLocation } from "react-router-dom";
 import { SwipeableCard } from "./SwipeableCard";
 import { api } from "@/lib/trpc";
-import { FullscreenEditor } from "./FullscreenEditor";
+import { useTranslation } from "react-i18next";
 
 
 export type BlinkoItem = Note & {
@@ -47,7 +47,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
   const { pathname } = useLocation();
-  const [isFullscreenEditorOpen, setIsFullscreenEditorOpen] = useState(false);
+  const [isInlineExpanded, setIsInlineExpanded] = useState(defaultExpanded);
+  const { t } = useTranslation();
 
   // Set isExpand flag to prevent drag when fullscreen editor is open for this note
   blinkoItem.isExpand = blinko.fullscreenEditorNoteId === blinkoItem.id;
@@ -67,9 +68,6 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const handleClick = () => {
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
-    } else if (blinkoItem.isBlog && !isShareMode) {
-      setIsFullscreenEditorOpen(true);
-      blinko.fullscreenEditorNoteId = blinkoItem.id!;
     }
   };
 
@@ -100,13 +98,6 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
 
   return (
     <>
-      {/* Fullscreen Editor Overlay */}
-      <FullscreenEditor
-        blinkoItem={blinkoItem}
-        isOpen={isFullscreenEditorOpen}
-        onClose={() => setIsFullscreenEditorOpen(false)}
-      />
-
       {(() => {
         const cardContent = (
           <div
@@ -130,11 +121,24 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               <div className="w-full">
                 <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={defaultExpanded} account={account} />
 
-                {blinkoItem.isBlog && (
+                {blinkoItem.isBlog && !isInlineExpanded && (
                   <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
                 )}
 
-                {!blinkoItem.isBlog && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={defaultExpanded} isShareMode={isShareMode} />}
+                {(!blinkoItem.isBlog || isInlineExpanded) && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={isInlineExpanded || defaultExpanded} isShareMode={isShareMode} />}
+
+                {blinkoItem.isBlog && !defaultExpanded && (
+                  <Button
+                    size="sm"
+                    variant="light"
+                    color="primary"
+                    className="mt-1 px-0 min-w-0 font-semibold"
+                    onPress={() => setIsInlineExpanded(value => !value)}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {isInlineExpanded ? t('show-less', 'Show less') : t('show-more', 'See more')}
+                  </Button>
+                )}
 
                 {/* Custom Footer Slots */}
                 {pluginApi.customCardFooterSlots
