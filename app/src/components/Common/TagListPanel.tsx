@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
 import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
@@ -85,6 +85,23 @@ export const TagListPanel = observer(() => {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const [tagSearch, setTagSearch] = useState('')
+  const visibleTags = useMemo(() => {
+    const query = tagSearch.trim().toLowerCase().replace(/^#/, '')
+    const tags = blinko.tagList.value?.listTags || []
+    if (!query) return tags
+
+    const filterTree = (items: any[]): any[] => items.flatMap((item) => {
+      const children = filterTree(item.children || [])
+      const path = String(item.metadata?.path || item.name || '').toLowerCase()
+      if (path.includes(query) || children.length > 0) {
+        return [{ ...item, children }]
+      }
+      return []
+    })
+
+    return filterTree(tags)
+  }, [blinko.tagList.value?.listTags, tagSearch])
   const isSelected = (id) => {
     return blinko.noteListFilterConfig.tagId == id && searchParams.get('path') == 'all'
   }
@@ -92,11 +109,22 @@ export const TagListPanel = observer(() => {
   return (
     <>
       <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}</div>
+      <Input
+        size="sm"
+        value={tagSearch}
+        onValueChange={setTagSearch}
+        placeholder={t('search-tags', 'Search tags')}
+        aria-label={t('search-tags', 'Search tags')}
+        className="mb-2"
+        startContent={<Icon icon="fluent:tag-search-24-regular" width="18" height="18" />}
+        isClearable
+        onClear={() => setTagSearch('')}
+      />
       <TreeView
         className="mb-4"
         data={flattenTree({
           name: "",
-          children: blinko.tagList.value?.listTags,
+          children: visibleTags,
         })}
         aria-label="directory tree"
         togglableSelect

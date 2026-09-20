@@ -16,6 +16,7 @@ import { NoteType } from '@shared/lib/types';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { useDragCard, DraggableBlinkoCard } from '@/hooks/useDragCard';
+import { TopicFilterBar } from '@/components/Common/TopicFilterBar';
 
 interface TodoGroup {
   displayDate: string;
@@ -157,6 +158,8 @@ const Home = observer(() => {
           }}
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
           className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>
+
+          {!isTodoView && !isArchivedView && !isTrashView && <TopicFilterBar />}
 
           {isTodoView ? (
             <div className="timeline-view relative">
