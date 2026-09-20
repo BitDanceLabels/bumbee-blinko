@@ -625,23 +625,16 @@ export class BlinkoStore implements Store {
 
       if (path == 'notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
-        this.noteOnlyList.resetAndCall({});
       } else if (path == 'todo') {
         this.noteListFilterConfig.type = NoteType.TODO
-        this.todoList.resetAndCall({});
       } else if (path == 'all') {
         this.noteListFilterConfig.type = -1
-        this.noteList.resetAndCall({});
       } else if (path == 'archived') {
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isArchived = true
-        this.archivedList.resetAndCall({});
       } else if (path == 'trash') {
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isRecycle = true
-        this.trashList.resetAndCall({});
-      } else {
-        this.blinkoList.resetAndCall({});
       }
 
       if (tagId) {
@@ -663,6 +656,20 @@ export class BlinkoStore implements Store {
         this.searchText = searchText as string;
       } else {
         this.searchText = '';
+      }
+
+      if (path == 'notes') {
+        this.noteOnlyList.resetAndCall({});
+      } else if (path == 'todo') {
+        this.todoList.resetAndCall({});
+      } else if (path == 'all') {
+        this.noteList.resetAndCall({});
+      } else if (path == 'archived') {
+        this.archivedList.resetAndCall({});
+      } else if (path == 'trash') {
+        this.trashList.resetAndCall({});
+      } else {
+        this.blinkoList.resetAndCall({});
       }
     }, [this.forceQuery, location.pathname, searchParams])
   }
