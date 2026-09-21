@@ -21,6 +21,7 @@ import { useLocation } from "react-router-dom";
 import { SwipeableCard } from "./SwipeableCard";
 import { api } from "@/lib/trpc";
 import { useTranslation } from "react-i18next";
+import { BilingualCoach } from "./BilingualCoach";
 
 
 export type BlinkoItem = Note & {
@@ -65,10 +66,15 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   }) || '';
 
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
+      return;
     }
+    if (isShareMode || (event.target as HTMLElement).closest('button, a, input, textarea, video, iframe, [role="button"]')) return;
+    blinko.curSelectedNote = _.cloneDeep(blinkoItem);
+    ShowEditBlinkoModel();
+    FocusEditorFixMobile();
   };
 
   const handleContextMenu = () => {
@@ -111,8 +117,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               onContextMenu={e => !isPc && e.stopPropagation()}
               shadow='none'
               className={`
-                flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
-                ${isPc && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
+                flex flex-col rounded-2xl border border-default-200/70 p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
+                ${isPc && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:-translate-y-0.5 hover:border-default-300 hover:shadow-md' : ''}
                 ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
                 ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
                 ${className}
@@ -139,6 +145,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                     {isInlineExpanded ? t('show-less', 'Show less') : t('show-more', 'See more')}
                   </Button>
                 )}
+
+                {!isShareMode && <BilingualCoach content={blinkoItem.content || ''} />}
 
                 {/* Custom Footer Slots */}
                 {pluginApi.customCardFooterSlots
