@@ -21,6 +21,7 @@ import { Skeleton } from '@heroui/react';
 import { MermaidWrapper } from './MermaidWrapper';
 import { MarkmapWrapper } from './MarkmapWrapper';
 import { EchartsWrapper } from './EchartsWrapper';
+import { getVideoSource, VideoEmbed } from './VideoEmbed';
 
 const HighlightTags = observer(({ text, }: { text: any }) => {
   const location = useLocation();
@@ -109,6 +110,13 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
                 
                 // Let's verify if we can access the link properties directly
                 if (typeof href === 'string') {
+                  if (getVideoSource(href)) {
+                    return (
+                      <div className="my-3" onClick={(event) => event.stopPropagation()}>
+                        <VideoEmbed href={href} />
+                      </div>
+                    );
+                  }
                   // We need to reconstruct the link content. 
                   // Since we are in the 'p' renderer, 'children' is the rendered 'a' element.
                   // We can't easily pass 'children' (which is <a>...</a>) as 'text' to LinkPreview.
@@ -216,4 +224,4 @@ export const StreamingCodeBlock = observer(({ markdown }: { markdown: string }) 
       {markdown}
     </ReactMarkdown>
   );
-}); 
+});

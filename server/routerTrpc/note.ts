@@ -167,7 +167,17 @@ export const noteRouter = router({
       }
 
       if (tagId) {
-        const tags = await prisma.tagsToNote.findMany({ where: { tagId } });
+        const tagIds = [tagId];
+        let parentIds = [tagId];
+        while (parentIds.length > 0) {
+          const children = await prisma.tag.findMany({
+            where: { parent: { in: parentIds }, accountId: Number(ctx.id) },
+            select: { id: true }
+          });
+          parentIds = children.map((tag) => tag.id).filter((id) => !tagIds.includes(id));
+          tagIds.push(...parentIds);
+        }
+        const tags = await prisma.tagsToNote.findMany({ where: { tagId: { in: tagIds } } });
         where.id = { in: tags?.map((i) => i.noteId) };
       }
       if (withFile) {

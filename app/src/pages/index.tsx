@@ -16,6 +16,8 @@ import { NoteType } from '@shared/lib/types';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
 import { useDragCard, DraggableBlinkoCard } from '@/hooks/useDragCard';
+import { TopicFilterBar } from '@/components/Common/TopicFilterBar';
+import { Button } from '@heroui/react';
 
 interface TodoGroup {
   displayDate: string;
@@ -39,6 +41,14 @@ const Home = observer(() => {
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [feedLayout, setFeedLayout] = useState<'grid' | 'list'>(() =>
+    localStorage.getItem('blinko-feed-layout') === 'list' ? 'list' : 'grid'
+  );
+
+  const updateFeedLayout = (layout: 'grid' | 'list') => {
+    setFeedLayout(layout);
+    localStorage.setItem('blinko-feed-layout', layout);
+  };
 
   const currentListState = useMemo(() => {
     if (isNotesView) {
@@ -158,6 +168,20 @@ const Home = observer(() => {
           style={{ height: store.showEditor ? `calc(100% - ${(isPc ? (!store.showEditor ? store.editorHeight : 10) : 0)}px)` : '100%' }}
           className={`px-2 mt-0 md:${blinko.config.value?.hidePcEditor ? 'mt-0' : 'mt-4'} md:px-6 w-full h-full !transition-all scroll-area`}>
 
+          {!isTodoView && !isArchivedView && !isTrashView && (
+            <div className="mb-2 flex items-center gap-2">
+              <div className="min-w-0 flex-1"><TopicFilterBar /></div>
+              <div className="flex shrink-0 rounded-xl border border-default-200 bg-background p-1 shadow-sm" aria-label="Kiểu hiển thị ghi chú">
+                <Button isIconOnly size="sm" variant={feedLayout === 'grid' ? 'flat' : 'light'} color={feedLayout === 'grid' ? 'primary' : 'default'} aria-label="Dạng lưới" title="Dạng lưới" onPress={() => updateFeedLayout('grid')}>
+                  <Icon icon="solar:widget-4-bold-duotone" width="20" />
+                </Button>
+                <Button isIconOnly size="sm" variant={feedLayout === 'list' ? 'flat' : 'light'} color={feedLayout === 'list' ? 'primary' : 'default'} aria-label="Dạng danh sách" title="Dạng danh sách" onPress={() => updateFeedLayout('list')}>
+                  <Icon icon="solar:list-bold-duotone" width="20" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           {isTodoView ? (
             <div className="timeline-view relative">
               {Object.entries(todosByDate).map(([date, { displayDate, todos }]) => (
@@ -193,11 +217,11 @@ const Home = observer(() => {
               >
                 <Masonry
                   breakpointCols={{
-                    default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
-                    1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
-                    768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
+                    default: feedLayout === 'list' ? 1 : (blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 3),
+                    1280: feedLayout === 'list' ? 1 : (blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2),
+                    768: feedLayout === 'list' ? 1 : (blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1)
                   }}
-                  className="card-masonry-grid"
+                  className={`card-masonry-grid ${feedLayout === 'list' ? 'mx-auto max-w-4xl' : ''}`}
                   columnClassName="card-masonry-grid_column">
                   {
                     localNotes?.map((i, index) => {
